@@ -4,34 +4,72 @@ imgtickrDirectives.directive('tickr', function () {
 	return {
 		restrict: 'C',
 		scope: {
-			channel : "="
+			channel : "=",
+			members : "="
 		},
 		templateUrl : 'tickr.html',
 		link: function (scope, elem, attrs) {
+			var printer = elem.find(".tickrTapePrinter");
 			var canvas = elem.find("canvas")[0];
 			var context = canvas.getContext('2d');
-			console.log(scope.channel);
+			scope.printer = {
+				status : "off",
+				change : function () {
+					if (this.status == "off") {
+						this.status = "on";
+					} else {
+						this.status = "off";
+					}
+				}
+			};
+
+
 			scope.file = null;
 			scope.upload = scope.$parent.upload;
 
-			canvas.width = elem.width();
-			scope.x = canvas.width;
+			canvas.width = elem.width()-55;
 
-			scope.$on(scope.channel, function (event, data) {
-//				console.log(data);
-//				canvas.width = canvas.width + 1;
-				scope.x--;
-				if (scope.x < 0) {
-					scope.x = canvas.width;
+			$(window).on('resize', function (e) {
+				canvas.width = elem.width()-55;
+			});
+
+			scope.x = {
+				value : 0,
+				increment : true,
+				advanceOld : function () {
+					if (this.increment) {
+						this.value++;
+					} else {
+						this.value--;
+					}
+					if (this.value > canvas.width) {
+						this.value -= 2;
+						this.increment = false;
+					} else if (this.value < 0) {
+						this.value +=2;
+						this.increment = true;
+					}
+					printer.css('left', scope.x.value - 20);
+				},
+				advance : function () {
+					this.value++;
+					if (this.value > canvas.width) {
+						this.value = 0;
+					}
+					printer.css('left', scope.x.value - 20);
 				}
-//				context.translate(-1, 0);
+			};
+
+			scope.$on(scope.channel  + 'line', function (event, data) {
+				scope.printer.change();
+				scope.x.advance();
 				printLine(data, context, canvas.width);
 			});
 
 			function printLine (line, context, width) {
 				for (var i = 0; i < line.length; i++) {
 					var pixelSize = 1;
-					var x = scope.x;
+					var x = scope.x.value;
 					var y = i*pixelSize;
 					context.fillStyle = 'rgb(' + line[i][0] + ', ' + line[i][1] + ', ' + line[i][2] + ')';
 					context.fillRect(x, y, pixelSize, pixelSize);
@@ -40,6 +78,36 @@ imgtickrDirectives.directive('tickr', function () {
 		}
 	}
 });
+
+imgtickrDirectives.directive('dropzone', ['$parse', function ($parse) {
+	return {
+		restrict: 'A',
+		link: function (scope, elem, attrs) {
+			var obj = $(elem);
+			obj.on('dragenter', function (e) {
+				e.stopPropagation();
+				e.preventDefault();
+				$(this).css('background-color', '#0B85A1');
+			});
+			obj.on('dragleave', function (e) {
+				e.stopPropagation();
+				e.preventDefault();
+				$(this).css('background-color', '#c8c8c8');
+			});
+			obj.on('dragover', function (e) {
+				e.stopPropagation();
+				e.preventDefault();
+				$(this).css('background-color', '#0B85A1');
+			});
+			obj.on('drop', function (e) {
+				$(this).css('background-color', '#c8c8c8');
+				e.preventDefault();
+				var files = e.originalEvent.dataTransfer.files;
+				scope.upload(files[0], scope.channel);
+			});
+		}
+	}
+}]);
 
 //http://uncorkedstudios.com/blog/multipartformdata-file-upload-with-angularjs
 imgtickrDirectives.directive('fileModel', ['$parse', function ($parse) {

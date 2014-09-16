@@ -5,23 +5,15 @@ var imgtickr = angular.module('imgtickr', [
 
 imgtickr.factory('api', ['$http', function ($http) {
 	return {
-		upload : function (formData, channel) {
+		upload : function (formData, channel, handle) {
 			return $http({
 				url: "/upload/" + channel,
 				method: "POST",
 				transformRequest: function (data) {
+					console.log(data);
 					var formData = new FormData();
 					formData.append('file', data);
-//					for (var key in data) {
-//						if (data.hasOwnProperty(key)){
-//							if (key == 'file') {
-//								console.log('found file: ' + data[key]);
-//								formData.append("file", data[key]);
-//							} else {
-//								formData.append(key, angular.toJson(data[key]));
-//							}
-//						}
-//					}
+					formData.append('handle', handle);
 					return formData;
 				},
 				headers: {'Content-Type':undefined},
