@@ -10,6 +10,7 @@ imgtickr.factory('api', ['$http', function ($http) {
 				url: "/upload/" + channel,
 				method: "POST",
 				transformRequest: function (data) {
+					console.log(data);
 					var formData = new FormData();
 					formData.append('file', data);
 					formData.append('handle', handle);
