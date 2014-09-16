@@ -1,6 +1,19 @@
 <div class="tickrTape">
-    <h3>{{channel}}</h3>
-    <input type="file" file-model="file">
-    <input type="button" ng-click="upload(file, channel)" value="tick!">
-    <canvas height="130" width="0"></canvas>
+    <div class="tickrTapeContainer">
+        <p class="tickrText" ng-mouseover="">#{{channel}}</p>
+        <p class="tickrText">('.')</p>
+        <p class="tickrText">x{{members}}</p>
+    </div>
+    <div class="tickrTapeContainer" style="width: 0;">
+        <div class="dropzone" dropzone="file"></div>
+        <input id="testFile" type="file" style="display: none;">
+    </div>
+    <div class="tickrTapeContainer" style="width: 0;">
+        <div class="tickrTapePrinter" >
+            <img src="/img/printer_on.png">
+        </div>
+    </div>
+    <div class="tickrTapeContainer">
+        <canvas height="130" width="0"></canvas>
+    </div>
 </div>

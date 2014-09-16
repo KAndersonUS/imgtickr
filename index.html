@@ -3,7 +3,7 @@
 <head lang="en">
     <meta charset="UTF-8">
     <script type='text/javascript' src='//code.jquery.com/jquery-1.11.0.min.js'></script>
-    <script type='text/javascript' src='/js/jquery-fileupload.min.js'></script>
+    <!--<script type='text/javascript' src='/js/jquery-fileupload.min.js'></script>-->
     <script type='text/javascript' src='https://cdn.socket.io/socket.io-1.0.6.js'></script>
     <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-rc.1/angular.min.js'></script>
     <script type='text/javascript' src='/js/controllers.js'></script>
@@ -15,10 +15,27 @@
     <title>imgtickr</title>
 </head>
 <body>
+    <header>
+        <h2>imgtickr <h4>chat with pixels</h4></h2>
+    </header>
     <div ng-app="imgtickr">
         <div class="container" ng-controller="mainCtrl">
+            <h4>you are {{handle}}</h4>
+            <form>
+                <label>
+                    #
+                    <input type="text" maxlength="16" ng-model="channels.toOpen" ng-enter="channels.open(channels.toOpen)">
+                </label>
+                <input type="button" value="Open" ng-click="channels.open(channels.toOpen)">
+            </form>
+            <form>
+                <label>
+                    Search:
+                    <input type="text" maxlength="16" ng-model="search" ng-enter="">
+                </label>
+            </form>
             <div ng-repeat="channel in openChannelNames" class="row">
-                <div class="tickr" data-channel="channel"></div>
+                <div class="tickr" data-channel="channel" data-members="openChannels[channel].members"></div>
             </div>
         </div>
     </div>
