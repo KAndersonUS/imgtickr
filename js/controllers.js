@@ -2,61 +2,103 @@ var imgtickrControllers = angular.module('imgtickrControllers', []);
 
 imgtickrControllers.controller('mainCtrl', ['$scope', 'api', function ($scope, api) {
 	$scope.upload = function (formData, channel) {
+		// TODO: pass upload code via socket to be matched on upload (to prevent handle spoofing)
 		api.upload(formData, channel, $scope.handle);
 	};
 
-	$scope.handle = randomString(13);
-
+	$scope.handle = "";
 	$scope.openChannels = {};
 	$scope.openChannelNames = [];
 	$scope.openChannelMembers = {};
 
+	var socket = io.connect	('http://' + window.location.host + '/');
+	socket.on('ping', function (data) {
+		socket.emit('pingback', {
+			testString : data.testString
+		});
+	});
+//	socket.on('connect', function (socket) {
+//
+//	});
+	socket.on('disconnect', function (data) {
+		// TODO: show that the server connection is not there
+	});
+	socket.on('handle', function (data) {
+		$scope.handle = data;
+		$scope.$apply();
+	});
+	socket.on('channelMeta', function (channels) {
+		var all = [];
+		console.log(channels);
+		for (var chan in channels) {
+			if (channels.hasOwnProperty(chan)) {
+				var obj = {
+					channel : chan,
+					members : channels[chan].members
+				};
+				all.push(obj);
+				if ($scope.openChannels.hasOwnProperty(chan)) {
+					$scope.openChannels[chan].members = channels[chan].members;
+				} else {
+					$scope.openChannels[chan] = obj;
+				}
+			}
+		}
+		$scope.channels.all = all;
+		$scope.$apply();
+	});
+
+
 	$scope.channels = {
 		open : function (channel) {
 			if ($scope.openChannelNames.indexOf(channel) == -1) {
-				api.openChannel(channel).success(function (data) {
-					var socket = io.connect('http://' + window.location.host + '/channels/' + channel);
-					socket.on('connect', function () {
-						// create channel element
-						$scope.openChannelNames.push(channel);
+				api.openChannel(channel).success(function (data, status) {
+					if (!socket._callbacks.hasOwnProperty(channel + 'line')) {
+						socket.emit('join', channel);
+						if ($scope.openChannelNames.indexOf(channel) == -1) {
+							$scope.openChannelNames.splice(0,0,channel);
+//							$scope.$apply();
+						}
 						// TODO: make openChannelNames array reflect openChannels object via watch / Object.getOwnPropertyNames()
-						$scope.$apply();
-					});
-					socket.on('disconnect', function () {
-						// destroy the channel element, but with some safeguards so random disconnects don't fuck with users.
-						$scope.openChannelNames.splice($scope.openChannelNames.indexOf(channel));
-					});
-					socket.on(channel + "line", function (data) {
-						$scope.$broadcast(channel + "line", decodeLine(data));
-					});
-					socket.on(channel + 'members', function (data) {
-						$scope.openChannels[channel].members = data;
-						$scope.$apply();
-					});
-					socket.on('ping', function (data) {
-						socket.emit('pingback', {
-							testString : data.testString
+
+						socket.on(channel + "line", function (data) {
+							$scope.$broadcast(channel + "line", decodeLine(data));
 						});
-					});
+					}
+
+					$scope.channels.all = data.all;
 					$scope.openChannels[channel] = {
-						socket : socket,
 						members : data.members
 					};
 					$scope.channels.toOpen = "";
+				}).error(function (err) {
+					console.log(err);
 				});
 			}
+		},
+		close : function (channel) {
+			socket.emit('leave', channel);
+//			api.closeChannel(channel).success(function (data, status) {
+				$scope.openChannelNames.splice($scope.openChannelNames.indexOf(channel), 1);
+				delete $scope.openChannels[channel];
+				console.log($scope.openChannels);
+//			}).error(function (err) {
+//				console.log(err);
+//			});
 		},
 		toOpen : "",
 		search : function () {
 			// TODO: Search channels
-		}
+		},
+		all : []
 	};
 
-	$scope.channels.open('public');
+	$scope.channels.open('pub');
+	// TODO: store open channels in localStorage
 
-	$scope.$watch('channelToOpen', function () {
+	$scope.$watch('channels.toOpen', function () {
 		if ($scope.channels.toOpen) {
-			$scope.channels.toOpen = $scope.channels.toOpen.replace(/\W+/g, "", "g").trim();
+			$scope.channels.toOpen = $scope.channels.toOpen.replace(/\W+/g, "", "g").trim().toLowerCase();
 		}
 	});
 

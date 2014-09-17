@@ -15,28 +15,38 @@
     <title>imgtickr</title>
 </head>
 <body>
-    <header>
-        <h2>imgtickr <h4>chat with pixels</h4></h2>
-    </header>
     <div ng-app="imgtickr">
         <div class="container" ng-controller="mainCtrl">
-            <h4>you are {{handle}}</h4>
-            <form>
-                <label>
-                    #
-                    <input type="text" maxlength="16" ng-model="channels.toOpen" ng-enter="channels.open(channels.toOpen)">
-                </label>
-                <input type="button" value="Open" ng-click="channels.open(channels.toOpen)">
-            </form>
-            <form>
-                <label>
-                    Search:
-                    <input type="text" maxlength="16" ng-model="search" ng-enter="">
-                </label>
-            </form>
+            <header>
+                <div>
+                    <img src="/img/logo.png">
+                    <table>
+                        <tbody>
+                        <tr>
+                            <td>
+                                <span>you are {{handle}}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>
+                                    #
+                                    <input type="text" maxlength="16" ng-model="channels.toOpen" on-enter="channels.open(channels.toOpen)">
+                                </label>
+                                <input type="button" value="Open" ng-click="channels.open(channels.toOpen)">
+                                <input type="button" value="Search" ng-click="channels.search(channels.toOpen)">
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </header>
             <div ng-repeat="channel in openChannelNames" class="row">
                 <div class="tickr" data-channel="channel" data-members="openChannels[channel].members"></div>
             </div>
+            <ul class="allChannels">
+                <li ng-repeat="chan in channels.all | orderBy:chan.members">{{chan.channel + " | " + chan.members}}</li>
+            </ul>
         </div>
     </div>
 </body>

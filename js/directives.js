@@ -26,11 +26,13 @@ imgtickrDirectives.directive('tickr', function () {
 
 			scope.file = null;
 			scope.upload = scope.$parent.upload;
+			scope.close = scope.$parent.channels.close;
 
 			canvas.width = elem.width()-55;
 
 			$(window).on('resize', function (e) {
 				canvas.width = elem.width()-55;
+				scope.x.advance(0);
 			});
 
 			scope.x = {
@@ -49,14 +51,17 @@ imgtickrDirectives.directive('tickr', function () {
 						this.value +=2;
 						this.increment = true;
 					}
-					printer.css('left', scope.x.value - 20);
+					printer.css('left', scope.x.value + 4);
 				},
-				advance : function () {
+				advance : function (pos) {
 					this.value++;
+					if (pos >= 0) {
+						this.value = 0;
+					}
 					if (this.value > canvas.width) {
 						this.value = 0;
 					}
-					printer.css('left', scope.x.value - 20);
+					printer.css('left', scope.x.value + 4);
 				}
 			};
 
@@ -130,6 +135,20 @@ imgtickrDirectives.directive('fileModel', ['$parse', function ($parse) {
 					modelSetter(scope, elem[0].files[0]);
 				})
 			})
+		}
+	}
+}]);
+
+imgtickrDirectives.directive('onEnter', [function () {
+	return {
+		restrict: 'A',
+		link: function (scope, elem, attrs) {
+			elem.bind('keydown keypress', function (e) {
+				if (e.which === 13) {
+					e.preventDefault();
+					scope.$eval(attrs.onEnter);
+				}
+			});
 		}
 	}
 }]);
