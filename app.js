@@ -14,12 +14,11 @@ var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var channels = {};
+var clients = {};
 var connections = {};
 
 
-app.engine('jade', require('jade').__express);
-//app.use(express.logger('dev'));
-app.set('view engine', 'jade');
+app.disable('etag');
 app.use(logger());
 app.use(express.static(__dirname));
 
@@ -64,19 +63,25 @@ app.get('/css/:name', function (req, res, next) {
 
 app.get('/open/:channel', function (req, res, next) {
 	var channel = req.params.channel;
-	if (!channels.hasOwnProperty(channel)) {
-		// if channel doesn't exist, create it.
-		openChannel(channel);
+	if (channel && typeof channel == "string") {
+		channel.replace(/\W+/g, "", "g").trim().toLowerCase();
+		if (!channels.hasOwnProperty(channel)) {
+			// if channel doesn't exist, create it.
+			openChannel(channel);
+		}
 	}
-	res.send(200, {members:channels[channel].members.length+1});
+	// no else statement, since the rest is taken care of in socket events
+	res.send(200, {members:channels[channel].members + 1});
 });
 
-app.get('/close/:channel', function (req, res, next) {
+app.post('/close/:channel', function (req, res, next) {
 	var channel = req.params.channel;
-	var socketId = req.param('socketId');
-	if (channels[channel].members.length <= 0) {
-		delete channels[channel];
-	}
+	// TODO: We should run a periodic check of channel membership instead of doing channel close via REST. They close on socket disconnect anyhow.
+//	if (channels[channel].members <= 0) {
+//		delete channels[channel];
+//	} else {
+//		channels[channel].socket.emit(channel + "members", channels[channel].members);
+//	}
 	res.send(200);
 });
 
@@ -111,8 +116,6 @@ app.post('/upload/:channel', function (req, res, next) {
 			} else {
 				res.send(403, "Bad handle");
 			}
-
-
 		}
 	});
 
@@ -124,45 +127,82 @@ server.listen(80);
 function openChannel (channel) {
 	channels[channel] = {
 		socket : null,
-		members : {}
+		members : 0
 	};
 	channels[channel].socket = io.of("/channels/" + channel);
+	channels[channel].socket.on('disconnect', function () {
+		channels[channel].members--;
+	});
 	channels[channel].socket.on('connect', function (socket) {
-		var socketId = socket.id;
-		channels[channel].members[socketId] = {
-			uploadTimer : 0,
-			ttl : 30,
-			pings : [],
-			uploads : 0,
-			updateTtl : function () {
-				this.ttl = this.ttl - (this.pings.length * 5);
-				if (this.ttl < 0) {
-					// kill member if ttl is below 0
-					io.sockets.emit(channel + "members", Object.getOwnPropertyNames(channels[channel].members).length);
+		var clientId = socket.id;
+		channels[channel].members++;
+		channels[channel].socket.emit(channel + "members", channels[channel].members);
+		if (clients.hasOwnProperty(clientId)) {
+			clients[clientId].openChannel(channel);
+			socket.emit('handle', clients[clientId].handle);
+		} else {
+			// if client doesn't exist yet
+			clients[clientId] = {
+				handle : randomString(13),
+				socket : socket,
+				uploadTimer : 0,
+				ttl : 30,
+				pings : [],
+				channels : [],
+				uploads : 0,
+				updateTtl : function () {
+					this.ttl = this.ttl - (this.pings.length * 5);
+					if (this.ttl < 0) {
+						// kill member if ttl is below 0
+						this.disconnect();
+					}
+				},
+				pinger : setInterval(function () {
+					var testString = randomString(16);
+					try {
+						clients[clientId].pings.push(testString);
+					} catch (err) {
+						console.log(err);
+					}
+					socket.emit('ping', {testString:testString});
+				},5000),
+				openChannel : function (channel) {
+					// add channel to channels array
+					if (this.channels.indexOf(channel) == -1) {
+						this.channels.push(channel);
+					}
+				},
+				closeChannel : function (channel) {
+					// remove channel from channels array.
+					if (this.channels.indexOf(channel) != -1) {
+						this.channels.splice(this.channels.indexOf(channel),1);
+					}
+				},
+				disconnect : function () {
+					clearInterval(this.pinger);
+					console.log(this.channels.length);
+					for (var i=0; i<this.channels.length; i++) {
+						// decrement all subscribed channel's member counts
+						channels[this.channels[i]].members--;
+						channels[channel].socket.emit(this.channels[i] + "members", channels[this.channels[i]].members);
+					}
 					delete this;
 				}
-			}
-		};
-
-		channels[channel].socket.emit(channel + "members", Object.getOwnPropertyNames(channels[channel].members).length);
-
-		var pinger = setInterval(function () {
-			var testString = randomString(16);
-			channels[channel].members[socketId].pings.push(testString);
-			socket.emit('ping', {testString:testString});
-		},5000);
-
-		socket.on('pingback', function (data) {
-			channels[channel].members[socketId].pings = channels[channel].members[socketId].pings.filter(function (item) {
-				return item != data.testString;
+			};
+			clients[clientId].socket.on('pingback', function (data) {
+				clients[clientId].pings = clients[clientId].pings.filter(function (item) {
+					return item != data.testString;
+				});
+				clients[clientId].updateTtl();
 			});
-			channels[channel].members[socketId].updateTtl();
-		});
-		socket.on('disconnect', function () {
-			clearInterval(pinger);
-			delete channels[channel].members[socketId];
-			channels[channel].socket.emit(channel + "members", Object.getOwnPropertyNames(channels[channel].members).length);
-		});
+			clients[clientId].socket.on('disconnect', function () {
+				clients[clientId].disconnect();
+			});
+			// add the channel to the newly created client object
+			clients[clientId].openChannel(channel);
+			// send the assigned handle back
+			clients[clientId].socket.emit('handle', clients[clientId].handle);
+		}
 	});
 }
 

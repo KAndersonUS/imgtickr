@@ -29,7 +29,7 @@ imgtickr.factory('api', ['$http', function ($http) {
 		closeChannel : function (channel) {
 			return $http({
 				url: "/close/" + channel,
-				method: "GET"
+				method: "POST"
 			})
 		}
 	}
