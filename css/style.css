@@ -20,7 +20,29 @@ header div img {
 header span, label {
     color: #C0BD70;
     font-weight: bold;
-    vertical-align: top;
+}
+
+header span.blue {
+    color: #709bc0;
+}
+
+header input[type="text"] {
+    color: #40773e;
+    background-color: #73c070;
+    border: none;
+}
+
+header ul {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex-grow: 1;
+}
+
+header li {
+    list-style: none;
+    padding-right: 10px;
+    cursor: alias;
 }
 
 .tickrTape {
@@ -33,10 +55,11 @@ header span, label {
     font-family: monospace;
 }
 
-span.tickrText {
-    position: relative;
-    top: 20px;
+p.tickrText.close {
+    margin-top: 20px;
+    cursor: default;
 }
+
 
 .tickrTapeContainer {
     display: inline;

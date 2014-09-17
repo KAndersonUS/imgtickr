@@ -31,22 +31,22 @@
                             <td>
                                 <label>
                                     #
-                                    <input type="text" maxlength="16" ng-model="channels.toOpen" on-enter="channels.open(channels.toOpen)">
+                                    <input id="toOpen" type="text" maxlength="16" ng-model="channels.toOpen" on-enter="channels.open(channels.toOpen)">
+                                    <span ng-show="channels.toOpen.length > 0" ng-class="{'blue':channels.toOpen.length < 16}">{{16-channels.toOpen.length}}</span>
                                 </label>
-                                <input type="button" value="Open" ng-click="channels.open(channels.toOpen)">
-                                <input type="button" value="Search" ng-click="channels.search(channels.toOpen)">
+                                <!--<input type="button" value="Open" ng-click="channels.open(channels.toOpen)">-->
                             </td>
                         </tr>
                         </tbody>
                     </table>
+                    <ul class="allChannels">
+                        <li ng-repeat="chan in channels.all | orderBy:chan.members | filter:channels.toOpen | limitTo:10" ng-click="channels.open(chan.channel)"><span>#{{chan.channel}}<span class="blue"> ({{chan.members}}) </span></span></li>
+                    </ul>
                 </div>
             </header>
             <div ng-repeat="channel in openChannelNames" class="row">
                 <div class="tickr" data-channel="channel" data-members="openChannels[channel].members"></div>
             </div>
-            <ul class="allChannels">
-                <li ng-repeat="chan in channels.all | orderBy:chan.members">{{chan.channel + " | " + chan.members}}</li>
-            </ul>
         </div>
     </div>
 </body>
