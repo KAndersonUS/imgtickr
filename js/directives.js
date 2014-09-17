@@ -1,5 +1,9 @@
 var imgtickrDirectives = angular.module('imgtickrDirectives', []);
 
+$(document).bind('keydown, keypress', function (e) {
+	$('#toOpen').focus();
+});
+
 imgtickrDirectives.directive('tickr', function () {
 	return {
 		restrict: 'C',
