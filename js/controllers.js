@@ -17,9 +17,6 @@ imgtickrControllers.controller('mainCtrl', ['$scope', 'api', function ($scope, a
 			testString : data.testString
 		});
 	});
-//	socket.on('connect', function (socket) {
-//
-//	});
 	socket.on('disconnect', function (data) {
 		// TODO: show that the server connection is not there
 	});
@@ -29,7 +26,6 @@ imgtickrControllers.controller('mainCtrl', ['$scope', 'api', function ($scope, a
 	});
 	socket.on('channelMeta', function (channels) {
 		var all = [];
-		console.log(channels);
 		for (var chan in channels) {
 			if (channels.hasOwnProperty(chan)) {
 				var obj = {
@@ -53,12 +49,9 @@ imgtickrControllers.controller('mainCtrl', ['$scope', 'api', function ($scope, a
 		open : function (channel) {
 			if ($scope.openChannelNames.indexOf(channel) == -1) {
 				api.openChannel(channel).success(function (data, status) {
-					if (!socket._callbacks.hasOwnProperty(channel + 'line')) {
+					if ($scope.openChannelNames.indexOf(channel) == -1) {
 						socket.emit('join', channel);
-						if ($scope.openChannelNames.indexOf(channel) == -1) {
-							$scope.openChannelNames.splice(0,0,channel);
-//							$scope.$apply();
-						}
+						$scope.openChannelNames.splice(0,0,channel);
 						// TODO: make openChannelNames array reflect openChannels object via watch / Object.getOwnPropertyNames()
 
 						socket.on(channel + "line", function (data) {
@@ -78,13 +71,8 @@ imgtickrControllers.controller('mainCtrl', ['$scope', 'api', function ($scope, a
 		},
 		close : function (channel) {
 			socket.emit('leave', channel);
-//			api.closeChannel(channel).success(function (data, status) {
-				$scope.openChannelNames.splice($scope.openChannelNames.indexOf(channel), 1);
-				delete $scope.openChannels[channel];
-				console.log($scope.openChannels);
-//			}).error(function (err) {
-//				console.log(err);
-//			});
+			$scope.openChannelNames.splice($scope.openChannelNames.indexOf(channel), 1);
+			delete $scope.openChannels[channel];
 		},
 		toOpen : "",
 		search : function () {
@@ -98,7 +86,7 @@ imgtickrControllers.controller('mainCtrl', ['$scope', 'api', function ($scope, a
 
 	$scope.$watch('channels.toOpen', function () {
 		if ($scope.channels.toOpen) {
-			$scope.channels.toOpen = $scope.channels.toOpen.replace(/\W+/g, "", "g").trim().toLowerCase();
+			$scope.channels.toOpen = $scope.channels.toOpen.replace(/\W|[0-9]|\s+/g, "", "g").trim().toLowerCase();
 		}
 	});
 

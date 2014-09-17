@@ -68,7 +68,7 @@ app.get('/open/:channel', function (req, res, next) {
 	var all = [];
 
 	if (channel && typeof channel == "string") {
-		channel.replace(/\W+/g, "", "g").trim().toLowerCase();
+		channel.replace(/\W|[0-9]+/g, "", "g").trim().toLowerCase();
 		if (!channels.hasOwnProperty(channel)) {
 			// if channel doesn't exist, create it.
 			openChannel(channel);
@@ -142,6 +142,9 @@ var channelMeta = {
 	},
 	leave : function (channel) {
 		channels[channel].members--;
+		if (channels[channel].members <=0) {
+			delete channels[channel];
+		}
 	},
 	notify : function () {
 		io.sockets.emit('channelMeta', channels);
