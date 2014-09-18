@@ -85,7 +85,7 @@ imgtickrControllers.controller('mainCtrl', ['$scope', 'api', function ($scope, a
 		}
 	}
 
-	$scope.$watch('channels.openChannelNames', function () {
+	$scope.$watchCollection('channels.openChannelNames', function () {
 		window.localStorage['imgTickr_chans'] = JSON.stringify($scope.channels.openChannelNames);
 	});
 
