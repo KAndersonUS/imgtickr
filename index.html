@@ -24,7 +24,7 @@
                         <tbody>
                         <tr>
                             <td>
-                                <span>you are {{handle}}</span>
+                                <span>you are {{client.handle}}</span>
                             </td>
                         </tr>
                         <tr>
@@ -34,7 +34,6 @@
                                     <input id="toOpen" type="text" maxlength="16" ng-model="channels.toOpen" on-enter="channels.open(channels.toOpen)">
                                     <span ng-show="channels.toOpen.length > 0" ng-class="{'blue':channels.toOpen.length < 16}">{{16-channels.toOpen.length}}</span>
                                 </label>
-                                <!--<input type="button" value="Open" ng-click="channels.open(channels.toOpen)">-->
                             </td>
                         </tr>
                         </tbody>
@@ -44,8 +43,8 @@
                     </ul>
                 </div>
             </header>
-            <div ng-repeat="channel in openChannelNames" class="row">
-                <div class="tickr" data-channel="channel" data-members="openChannels[channel].members"></div>
+            <div ng-repeat="channel in channels.openChannelNames" class="row">
+                <div class="tickr" data-channel="channel" data-members="channels.openChannels[channel].members"></div>
             </div>
         </div>
     </div>

@@ -16,17 +16,6 @@ imgtickrDirectives.directive('tickr', function () {
 			var printer = elem.find(".tickrTapePrinter");
 			var canvas = elem.find("canvas")[0];
 			var context = canvas.getContext('2d');
-			scope.printer = {
-				status : "off",
-				change : function () {
-					if (this.status == "off") {
-						this.status = "on";
-					} else {
-						this.status = "off";
-					}
-				}
-			};
-
 
 			scope.file = null;
 			scope.upload = scope.$parent.upload;
@@ -41,22 +30,6 @@ imgtickrDirectives.directive('tickr', function () {
 
 			scope.x = {
 				value : 0,
-				increment : true,
-				advanceOld : function () {
-					if (this.increment) {
-						this.value++;
-					} else {
-						this.value--;
-					}
-					if (this.value > canvas.width) {
-						this.value -= 2;
-						this.increment = false;
-					} else if (this.value < 0) {
-						this.value +=2;
-						this.increment = true;
-					}
-					printer.css('left', scope.x.value + 4);
-				},
 				advance : function (pos) {
 					this.value++;
 					if (pos >= 0) {
@@ -70,7 +43,6 @@ imgtickrDirectives.directive('tickr', function () {
 			};
 
 			scope.$on(scope.channel  + 'line', function (event, data) {
-				scope.printer.change();
 				scope.x.advance();
 				printLine(data, context, canvas.width);
 			});
@@ -89,6 +61,7 @@ imgtickrDirectives.directive('tickr', function () {
 });
 
 imgtickrDirectives.directive('dropzone', ['$parse', function ($parse) {
+	// TODO: upload via url paste
 	return {
 		restrict: 'A',
 		link: function (scope, elem, attrs) {
