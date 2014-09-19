@@ -40,7 +40,9 @@ imgtickrControllers.controller('mainCtrl', ['$scope', 'api', function ($scope, a
 
 	$scope.upload = function (formData, channel) {
 		// TODO: pass upload code via socket to be matched on upload (to prevent handle spoofing)
-		api.upload(formData, channel, $scope.client.handle);
+		api.upload(formData, channel, $scope.client.handle).success(function () {
+			$scope.$broadcast(channel + "clearFile");
+		});
 	};
 
 	$scope.channels = {

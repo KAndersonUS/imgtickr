@@ -86,7 +86,9 @@ imgtickrDirectives.directive('dropzone', ['$parse', function ($parse) {
 				$(this).css('background-color', '#c8c8c8');
 				e.preventDefault();
 				var files = e.originalEvent.dataTransfer.files;
-				scope.upload(files[0], scope.channel);
+				scope.upload(files[0], scope.channel).success(function () {
+					console.log('success');
+				});
 			});
 			obj.on('click', function (e) {
 				fileInput.trigger('click');
@@ -95,6 +97,9 @@ imgtickrDirectives.directive('dropzone', ['$parse', function ($parse) {
 				e.preventDefault();
 				var files = e.originalEvent.srcElement.files;
 				scope.upload(files[0], scope.channel);
+			});
+			scope.$on(scope.channel + "clearFile", function () {
+				fileInput.replaceWith(fileInput = fileInput.clone(true));
 			});
 		}
 	}
